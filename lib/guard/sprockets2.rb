@@ -33,7 +33,10 @@ module Guard
       time_taken = time do
         successful = @compiler.compile
       end
-      UI.info "completed in #{time_taken} seconds" if successful
+      if successful
+        UI.info "completed in #{time_taken} seconds"
+        Notifier.notify("Successfully compiled (#{time_taken}s)", :title => 'CoffeeScript results', :image => :success, :priority => 2)
+      end
     end
     
     def time(&block)

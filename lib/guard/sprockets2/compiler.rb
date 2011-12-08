@@ -1,3 +1,6 @@
+require 'guard'
+require 'guard/guard'
+
 module Guard
   class Sprockets2::Compiler
     def initialize(options = {})
@@ -15,10 +18,17 @@ module Guard
       @precompile.each do |path|
         @sprockets.each_logical_path do |logical_path|
           next unless path_matches?(path, logical_path)
-
-          if asset = @sprockets.find_asset(logical_path)
-            success = compile_asset(asset)
-            break unless success
+          begin 
+            if asset = @sprockets.find_asset(logical_path)
+              success = compile_asset(asset)
+              break unless success
+            end
+          rescue => e
+            puts unless ENV["GUARD_ENV"] == "test"
+            msg = e.message.gsub(/^Error: /, '')
+            UI.error msg
+            Notifier.notify(msg, :title => 'CoffeeScript results', :image => :failed, :priority => 2)
+            return false
           end
         end
       end
@@ -32,12 +42,8 @@ module Guard
     
       FileUtils.mkdir_p filename.dirname
       asset.write_to(filename)
-      asset.write_to("#{filename}.gz") if @gz && filename.to_s =~ /\.(css|js)$/
+      # asset.write_to("#{filename}.gz") if @gz && filename.to_s =~ /\.(css|js)$/
       true
-    rescue => e
-      puts unless ENV["GUARD_ENV"] == "test"
-      UI.error e.message.gsub(/^Error: /, '')
-      false
     end
   
     def path_matches?(path, logical_path)
