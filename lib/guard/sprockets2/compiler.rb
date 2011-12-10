@@ -38,7 +38,7 @@ module Guard
     protected
 
     def compile_asset(asset)
-      filename = @digest ? @target.join(asset.digest_path) : @target.join(asset.logical_path)
+      filename = @target.join(asset.logical_path)
     
       FileUtils.mkdir_p filename.dirname
       asset.write_to(filename)
